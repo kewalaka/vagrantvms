@@ -1,0 +1,41 @@
+# Machine parameters
+servers = [
+  { :hostname => 'labica02', :box => 'win2k12r2', :cpus => '2', :maxmemory => '2048'}
+]
+
+# Vagrant configuration (file format v2)
+#
+Vagrant.configure("2") do |config|
+
+  # disabled shared folders
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+
+  servers.each do |machine|
+
+    config.vm.define machine[:hostname] do |node|
+      # machine to base off
+      node.vm.box = machine[:box]
+
+      # set the vSwitch to use
+      node.vm.network "public_network", bridge: "vExternal"
+
+      # hyper-v specifics, see 	https://www.vagrantup.com/docs/hyperv/configuration.html
+      node.vm.provider "hyperv" do |h|
+          h.vmname = machine[:hostname]
+          h.cpus = machine[:cpus]
+          # maxmemory is the maximum allowed via dynamic allocation
+          h.maxmemory = machine[:maxmemory]
+          h.differencing_disk = true
+          h.auto_start_action = "Nothing"
+          h.auto_stop_action = "TurnOff"
+          h.ip_address_timeout = 600
+      end
+
+      # do a reboot
+      node.vm.provision :reload      
+
+    end
+    
+  end
+
+end

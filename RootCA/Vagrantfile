@@ -1,0 +1,23 @@
+# Vagrant configuration (file format v2)
+#
+Vagrant.configure("2") do |config|
+
+  # machine to base off
+  config.vm.box = "windows2012r2"
+
+  # disabled shared folders
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+
+  # set the vSwitch to use
+  config.vm.network "public_network", bridge: "vExternal"
+
+  # hyper-v specifics
+  config.vm.provider "hyperv" do |h|
+    h.vmname = "RootCA"
+    h.differencing_disk = true
+    h.auto_start_action = "Nothing"
+    h.auto_stop_action = "TurnOff"
+    h.ip_address_timeout = 600
+  end
+
+end
