@@ -2,6 +2,14 @@
 
 Needs more docs, just some random machines built using Vagrant for now.
 
+Find vagrant machines with vagrant global-status
+
+Add machines example
+
+```
+vagrant box add win10-1903 D:\Vagrant\Win10\1903\windows_10_hyperv.box
+```
+
 ### Setup
 
 ```
