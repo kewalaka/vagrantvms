@@ -1,7 +1,7 @@
 # Machine parameters
 servers = [
-  { :hostname => 'rootca',   :box => 'win2k19', :cpus => '1', :maxmemory => '2048'},
-  { :hostname => 'labica01', :box => 'win2k19', :cpus => '2', :maxmemory => '2048'}
+  { :hostname => 'labocsp01',   :box => 'win2k19', :cpus => '1', :maxmemory => '2048'},
+  { :hostname => 'labocsp02', :box => 'win2k19', :cpus => '2', :maxmemory => '2048'}
 ]
 
 # Vagrant configuration (file format v2)
