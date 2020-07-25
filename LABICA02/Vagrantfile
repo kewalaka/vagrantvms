@@ -1,6 +1,6 @@
 # Machine parameters
 servers = [
-  { :hostname => 'labica02', :box => 'win2k12r2', :cpus => '2', :maxmemory => '2048'}
+  { :hostname => 'labica02', :box => 'win2k19', :cpus => '2', :maxmemory => '2048'}
 ]
 
 # Vagrant configuration (file format v2)

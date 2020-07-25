@@ -1,2 +1,5 @@
 $env:chocolateyUseWindowsCompression = 'false'
-Invoke-WebRequest -Uri 'https://chocolatey.org/install.ps1' -UseBasicParsing | Invoke-Expression
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+Invoke-Expression ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1'))
+
+

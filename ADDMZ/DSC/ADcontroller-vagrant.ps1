@@ -16,13 +16,13 @@ Install-Module xActiveDirectory, xPendingReboot, xDNSServer, xDhcpServer, xNetwo
 . $PSScriptRoot\ADcontroller.ps1
 
 # environment specific settings
-$DomainNetBIOSName = 'kewalaka'
+$DomainNetBIOSName = 'dmz'
 $ConfigData = @{
     AllNodes = @(
 
         @{
             Nodename             = "*"
-            DomainName           = "ad.kewalaka.nz"
+            DomainName           = "dmz.kewalaka.nz"
             DomainNetBIOSName    = $DomainNetBIOSName
             CertificateFile      = $env:DSC_CertLocation
             Thumbprint           = $env:DSC_CertThumbprint
@@ -34,7 +34,7 @@ $ConfigData = @{
         },
 
         @{
-            Nodename = "labdc01"
+            Nodename = "labdmzdc01"
             Role     = "First DC"
             SiteName = "labsite1"
         },

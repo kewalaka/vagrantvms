@@ -1,21 +1,8 @@
 # Machine parameters
 nodes = [
-  { :hostname => 'LABSQL01', :box => 'unpatched-win2k12r2', :cpus => '2', :maxmemory => '4096'}
+  { :hostname => 'labsql01', :box => 'win2k16', :cpus => '2', :maxmemory => '4096'}
 ]
 vSwitch =  "vExternal"
-
-
-#def provision_chocolatey(config)
-#    config.vm.provision "shell" do  |script|
-#        script.name = "Install Chocolatey"
-#        script.inline = "iex ((new-object net.webclient).DownloadString('https://chocolatey.org/install.ps1'))"
-#        script.privileged = false
-#    end
-#end
-
-#system("
-#      cmd /c powershell.exe -noprofile -file ../scripts/Set-GuestIP.ps1
-#")
 
 # Vagrant configuration (file format v2)
 Vagrant.configure("2") do |config|
@@ -39,26 +26,31 @@ Vagrant.configure("2") do |config|
         h.cpus = node[:cpus]
         # maxmemory is the maximum allowed via dynamic allocation
         h.maxmemory = node[:maxmemory]
-        h.differencing_disk = true
+        h.linked_clone = true
         h.auto_start_action = "Nothing"
         h.auto_stop_action = "TurnOff"
-        h.ip_address_timeout = 600
+        h.ip_address_timeout = 900
     end
 
-    # copy and run provisioning scripts
+    # copy and run DSC pre-requisite install scripts 
     # - tracking scheduled task issue - https://github.com/hashicorp/vagrant/issues/9138
-    config.vm.provision "file", source: "./scripts", destination: "C:/tmp/"
-
-    config.vm.provision "shell", inline: "C:/tmp/scripts/001-Invoke-Scripts.ps1"
+    config.vm.provision "file", source: "../scripts", destination: "C:/tmp/"
+    config.vm.provision "shell", inline: "C:/tmp/scripts/001-InstallPS5.ps1"
     
     # do a reboot
     config.vm.provision :reload
     
-    # install modules
-    config.vm.provision "shell", inline: "C:/tmp/scripts/002-Invoke-Scripts.ps1", privileged: false
+    # install nuget provider & setup DSC certificate
+    config.vm.provision "shell", inline: "C:/tmp/scripts/002-PrepDSC.ps1"
+    config.vm.provision "shell", inline: "refreshenv.cmd"
 
-    #provision_chocolatey(config)
-    
+    # copy & run DSC scripts
+    config.vm.provision "file", source: "./DSC", destination: "C:/Admin"
+    config.vm.provision "shell" do |s|
+      s.inline = "C:/Admin/DSC/SQLServer-vagrant.ps1 $args[0]"
+      s.args   = [ENV['Password']]
+    end
+
   end
 
 end
