@@ -33,11 +33,16 @@ Vagrant.configure("2") do |config|
       end
 
       # rename the computer to machine the VM name
-      config.vm.provision "shell", inline: "Rename-Computer (Get-ItemProperty 'HKLM:\Software\Microsoft\Virtual Machine\Guest\Parameters\').VirtualMachineName"
-      
+      config.vm.provision "shell", inline: "Rename-Computer (Get-ItemProperty 'HKLM:\\Software\\Microsoft\\Virtual Machine\\Guest\\Parameters\\').VirtualMachineName"
+
       # do a reboot
       node.vm.provision :reload      
 
+      # copy and run DSC pre-requisite install scripts 
+      # - tracking scheduled task issue - https://github.com/hashicorp/vagrant/issues/9138
+      config.vm.provision "file", source: "../scripts", destination: "C:/tmp/"
+      config.vm.provision "shell", inline: "C:/tmp/scripts/001-InstallPS5.ps1"
+            
     end
     
   end

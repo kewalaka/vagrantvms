@@ -7,7 +7,7 @@ Param
 
 # install depedent modules
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-Install-Module PSDesiredStateConfiguration, SQLServerDsc, SecurityPolicyDsc
+Install-Module SQLServerDsc, SecurityPolicyDsc
 
 # load in the configuration document
 . $PSScriptRoot\SQLServer.ps1
@@ -17,14 +17,38 @@ $DSCFolder = Split-Path $env:DSC_CertLocation
 
 # create username/password credential objects from parameters
 $secureString = $Passwords | ConvertTo-SecureString -AsPlainText -Force
-$PasswordCredential = New-Object -TypeName System.Management.Automation.PSCredential `
-  -ArgumentList 'Administrator', $secureString
+$AdminCredential = New-Object -TypeName System.Management.Automation.PSCredential `
+  -ArgumentList "$env:USERDOMAIN\a-stu", $secureString
+
+$SQLEngineCredential = New-Object -TypeName System.Management.Automation.PSCredential `
+  -ArgumentList "$env:USERDOMAIN\s-sqlengine", $secureString
+
+$SQLAgentCredential = New-Object -TypeName System.Management.Automation.PSCredential `
+  -ArgumentList "$env:USERDOMAIN\s-sqlagent", $secureString
+
+# environment specific settings
+$ConfigData = @{
+  AllNodes = @(
+
+    @{
+      Nodename             = "*"
+      CertificateFile      = $env:DSC_CertLocation
+      Thumbprint           = $env:DSC_CertThumbprint
+      PSDscAllowDomainUser = $true
+      RebootIfNeeded       = $true
+    },
+
+    @{
+      Nodename = "labsql01"
+    }
+  )
+}
 
 # produce the MOF
-SQLServer -OutputPath $DSCFolder `
-  -SqlServiceCredential $PasswordCredential `
-  -SqlAgentServiceCredential $PasswordCredential `
-  -SqlAdminCredential $PasswordCredential 
+SQLServer -OutputPath $DSCFolder -ConfigurationData $ConfigData `
+  -SqlServiceCredential $SQLEngineCredential `
+  -SqlAgentServiceCredential $SQLAgentCredential `
+  -SqlAdminCredential $AdminCredential 
 
 # set up the LCM to use the certificate
 Set-DscLocalConfigurationManager -ComputerName $env:COMPUTERNAME -Path $DSCFolder -Verbose

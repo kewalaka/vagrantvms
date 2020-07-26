@@ -10,7 +10,8 @@ Param
 )
 
 # install depedent modules
-Install-Module xActiveDirectory, xPendingReboot, xDNSServer, xDhcpServer, xNetworking -Force
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+Install-Module ActiveDirectoryDsc, ComputerManagementDsc, xDnsServer, xDhcpServer, NetworkingDsc -Force
 
 # load in the configuration document
 . $PSScriptRoot\ADcontroller.ps1
