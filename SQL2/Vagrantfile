@@ -1,0 +1,56 @@
+# Machine parameters
+nodes = [
+  { :hostname => 'labsql02', :box => 'win2k16', :cpus => '2', :maxmemory => '4096'}
+]
+vSwitch =  "vExternal"
+
+# Vagrant configuration (file format v2)
+Vagrant.configure("2") do |config|
+
+  config.winrm.username = 'vagrant'
+  config.winrm.password = "vagrant" 
+
+  nodes.each do |node|
+    # machine to base off
+    config.vm.box = node[:box]
+
+    # disabled shared folders
+    config.vm.synced_folder ".", "/vagrant", disabled: true
+
+    # set the vSwitch to use
+    config.vm.network "public_network", bridge: "vExternal"
+
+    # hyper-v specifics, see 	https://www.vagrantup.com/docs/hyperv/configuration.html
+    config.vm.provider "hyperv" do |h|
+        h.vmname = node[:hostname]
+        h.cpus = node[:cpus]
+        # maxmemory is the maximum allowed via dynamic allocation
+        h.maxmemory = node[:maxmemory]
+        h.linked_clone = true
+        h.auto_start_action = "Nothing"
+        h.auto_stop_action = "TurnOff"
+        h.ip_address_timeout = 900
+    end
+
+    # copy and run DSC pre-requisite install scripts 
+    # - tracking scheduled task issue - https://github.com/hashicorp/vagrant/issues/9138
+    config.vm.provision "file", source: "../scripts", destination: "C:/tmp/"
+    config.vm.provision "shell", inline: "C:/tmp/scripts/001-InstallPS5.ps1"
+    
+    # do a reboot
+    config.vm.provision :reload
+    
+    # install nuget provider & setup DSC certificate
+    config.vm.provision "shell", inline: "C:/tmp/scripts/002-PrepDSC.ps1"
+    config.vm.provision "shell", inline: "refreshenv.cmd"
+
+    # copy & run DSC scripts
+    config.vm.provision "file", source: "./DSC", destination: "C:/Admin"
+    config.vm.provision "shell" do |s|
+      s.inline = "C:/Admin/DSC/SQLServer-vagrant.ps1 $args[0]"
+      s.args   = [ENV['Password']]
+    end
+
+  end
+
+end

@@ -31,13 +31,13 @@ Configuration IISConfiguration
             Ensure                         = "Absent";
         }
 
-        xWebAppPool DefaultAppPool
+        xWebAppPool DefaultAppPooldotNetClassic
         {
             Name                           = ".NET v4.5 Classic";
             Ensure                         = "Absent";
         }
 
-        xWebAppPool DefaultAppPool
+        xWebAppPool DefaultAppPooldotNet
         {
             Name                           = ".NET v4.5";
             Ensure                         = "Absent";
@@ -98,9 +98,12 @@ Configuration IISConfiguration
             State                          = "Started";
         }
 
-        xWebsite {
+        xWebsite myWebsite {
             ApplicationPool          = "mysite";
-            AuthenticationInfo       = "
+<#
+#   Exception calling "ValidateInstanceText" with "1" argument(s): "Convert property 'AuthenticationInfo' value from type 'STRING' to type 'INSTANCE' failed
+# At line:179, char:2          AuthenticationInfo       = "
+
 				MSFT_xWebAuthenticationInformation
 				{
 					Basic = $False;
@@ -117,10 +120,10 @@ Configuration IISConfiguration
 					Port = 80;
 					Hostname = '';
 				}");
+#>
             DefaultPage              = @("Default.htm","Default.asp","index.htm","index.html","iisstart.htm","default.aspx");
             EnabledProtocols         = "http";
             Ensure                   = "Present";
-            LogCustomFields          = "";
             LogFlags                 = @("Date","Time","ClientIP","UserName","ServerIP","Method","UriStem","UriQuery","HttpStatus","Win32Status","TimeTaken","ServerPort","UserAgent","Referer","HttpSubStatus");
             LogFormat                = "W3C";
             LoglocalTimeRollover     = $False;
@@ -145,10 +148,11 @@ Configuration IISConfiguration
 
     }
 }
+
 $ConfigData = @{
     AllNodes = @(
     @{
-        NodeName = "LABIIS01";
+        NodeName = "iis1";
         PSDscAllowPlainTextPassword = $true;
         PSDscAllowDomainUser = $true;
     }
@@ -156,6 +160,10 @@ $ConfigData = @{
 IISConfiguration -ConfigurationData $ConfigData
 
 <#
+
+[Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
+Install-Module xWebAdministration
+
 	Remove-DscConfigurationDocument -Stage Pending,Current,Previous -Force
 	Start-DscConfiguration -Path .\IISConfiguration -Verbose -Wait
 	Test-DscConfiguration -Verbose

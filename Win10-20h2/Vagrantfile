@@ -1,0 +1,50 @@
+# Machine parameters
+machines = [
+#  { :hostname => 'win10', :box => 'StefanScherer/windows_10', :cpus => '1', :maxmemory => '2048'}
+{ :hostname => 'win10', :box => 'win10-20h2', :cpus => '1', :maxmemory => '2048'}
+]
+
+# Vagrant configuration (file format v2)
+#
+Vagrant.configure("2") do |config|
+
+  # disabled shared folders
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+
+  machines.each do |machine|
+
+    config.vm.define machine[:hostname] do |node|
+      # machine to base off
+      node.vm.box = machine[:box]
+
+      # set the vSwitch to use
+      node.vm.network "public_network", bridge: "vExternal"
+
+      # hyper-v specifics, see 	https://www.vagrantup.com/docs/hyperv/configuration.html
+      node.vm.provider "hyperv" do |h|
+          h.vmname = machine[:hostname]
+          h.cpus = machine[:cpus]
+          # maxmemory is the maximum allowed via dynamic allocation
+          h.maxmemory = machine[:maxmemory]
+          h.linked_clone = true
+          h.auto_start_action = "Nothing"
+          h.auto_stop_action = "TurnOff"
+          h.ip_address_timeout = 600
+      end
+
+      # rename the computer to machine the VM name
+      config.vm.provision "shell", inline: "Rename-Computer (Get-ItemProperty 'HKLM:\\Software\\Microsoft\\Virtual Machine\\Guest\\Parameters\\').VirtualMachineName"
+
+      # do a reboot
+      node.vm.provision :reload      
+
+      # copy and run DSC pre-requisite install scripts 
+      # - tracking scheduled task issue - https://github.com/hashicorp/vagrant/issues/9138
+      config.vm.provision "file", source: "../scripts", destination: "C:/tmp/"
+      config.vm.provision "shell", inline: "C:/tmp/scripts/001-InstallPS5.ps1"
+            
+    end
+    
+  end
+
+end
